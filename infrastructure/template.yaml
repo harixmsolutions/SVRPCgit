@@ -1,0 +1,55 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  AWS CloudFormation Template to create IAM role and DDB tables
+Resources:
+
+  GAexecutionRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2008-10-17
+        Statement:
+          - Sid: ''
+            Effect: Allow
+            Principal:
+              Service: sagemaker.amazonaws.com
+            Action: 'sts:AssumeRole'
+      ManagedPolicyArns:
+        # allow logging
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+        # read and write into DDB
+        - arn:aws:iam::aws:policy/AmazonDynamoDBFullAccess
+        # ability to get the container image from ECR
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+        # sagemaker needs the ability to read S3 buckets
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+
+  ResultsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "ga-blog-stack-Results"
+      AttributeDefinitions:
+        - AttributeName: GUID
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: GUID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  DeliveryStopsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: "ga-blog-stack-DeliveryStops"
+      AttributeDefinitions:
+        - AttributeName: StopsSetID
+          AttributeType: "N"
+      KeySchema:
+        - AttributeName: StopsSetID
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  ResultTableName:
+    Value: !Ref ResultsTable
+  DeliveryStopsTableName:
+    Value: !Ref DeliveryStopsTable
